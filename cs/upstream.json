@@ -1,0 +1,13 @@
+{
+  "upstream": "https://github.com/ranuts/document",
+  "tag": "v0.0.9",
+  "commit": "cf4e9a7f10fd8581740f453c33c01900e94dbfdf",
+  "onlyoffice_target": {
+    "documentserver_tag": "v10.0.0",
+    "docker_image": "onlyoffice/documentserver:10.0.0@sha256:ca17889f10b11141cc6441836aebdd2835cf3e1b49681b2fd6e155c94b7850b3",
+    "sdkjs_tag": "v10.0.0.176",
+    "core_commit_for_x2t": "ed63e94de814ff1d4ea28cddfaba6939bc9df9ed",
+    "x2t_repo": "https://github.com/Kangchanghwan/onlyoffice-x2t-wasm (branch cs/x2t-10.0)",
+    "offline_shim": "https://github.com/wasmtools/office-web @ 80b7e9ebcd2b3d8b6f8208eb4f4d526739d6be5e"
+  }
+}
