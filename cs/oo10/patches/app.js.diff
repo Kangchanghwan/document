@@ -1,0 +1,20 @@
+--- /Users/kangchanghwan/Documents/personal/wt-office-web/web/app.js	2026-11-22 21:35:35
++++ poc/web/app.js	2026-11-23 08:21:24
+@@ -385,6 +385,8 @@
+     //   NotoNaskhArabic (Arabic), LohitDevanagari (Devanagari/Hindi),
+     //   NanumGothic (Korean), FreeSerif (Thai + many others).
+     var PDF_MERGE_FONTS = [
++        { url: 'vendor/decoded-fonts/001.ttf', name: 'Arial.ttf' },
++        { url: 'vendor/decoded-fonts/003.ttf', name: 'Arial-Bold.ttf' },
+         { url: 'vendor/pdf-fonts/NotoSansSC.ttf', name: 'NotoSansSC.ttf' },
+         { url: 'vendor/pdf-fonts/DroidSansFallbackFull.ttf', name: 'DroidSansFallbackFull.ttf' },
+         { url: 'vendor/pdf-fonts/DejaVuSans.ttf', name: 'DejaVuSans.ttf' },
+@@ -955,7 +957,7 @@
+     // ---------- offline download-as bridge ----------
+     var OFFLINE_FORMAT_EXT = {
+         65: 'docx', 67: 'odt', 68: 'rtf', 69: 'txt',
+-        257: 'xlsx', 259: 'ods', 260: 'csv',
++        257: 'xlsx', 258: 'xls', 259: 'ods', 260: 'csv',
+         129: 'pptx', 131: 'odp',
+         513: 'pdf'
+     };
