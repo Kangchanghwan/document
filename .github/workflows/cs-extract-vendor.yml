@@ -30,7 +30,11 @@ jobs:
           sleep 10
           D=/var/www/onlyoffice/documentserver
           mkdir -p out
-          for p in web-apps sdkjs sdkjs-plugins fonts dictionaries; do docker cp ds:$D/$p out/$p || echo "missing $p"; done
+          docker exec ds sh -c "ls -la $D" | tee out/ds-ls.txt
+          for p in web-apps sdkjs sdkjs-plugins fonts dictionaries; do
+            docker exec ds sh -c "test -e $D/$p" && docker exec ds tar -C $D -cf - $p | tar -xf - -C out || echo "missing $p"
+          done
+          chmod -R u+rwX out
           docker exec ds sh -c "ls $D; cat $D/server/package.json 2>/dev/null | head -5" > out/ds-tree.txt || true
           docker exec ds sh -c "ls /usr/share/fonts -R | head -200" > out/system-fonts.txt || true
           cp digest.json out/
@@ -44,11 +48,11 @@ jobs:
           grep -o '"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"' web-apps/apps/api/documents/api.js | head -3 | tee -a ../du.txt || true
           grep -rl "_offline_" web-apps sdkjs | head -20 | tee -a ../du.txt || true
           cp ../du.txt inventory.txt
-          tar -I 'zstd -19 -T0' -cf ../vendor-${{ matrix.tag }}.tar.zst .
-          ls -l ../vendor-${{ matrix.tag }}.tar.zst
+          tar -czf ../vendor-${{ matrix.tag }}.tar.gz .
+          ls -l ../vendor-${{ matrix.tag }}.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: vendor-${{ matrix.tag }}
-          path: vendor-${{ matrix.tag }}.tar.zst
+          path: vendor-${{ matrix.tag }}.tar.gz
           compression-level: 0
           retention-days: 14
