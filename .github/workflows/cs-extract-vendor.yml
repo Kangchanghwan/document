@@ -1,0 +1,54 @@
+name: cs-extract-vendor
+# Extract the official ONLYOFFICE Docs frontend (web-apps, sdkjs, fonts) from the
+# Docker image so the browser-only editor ships an unmodified official build.
+on:
+  push:
+    branches: [cs/vendor-extract]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: documentserver image tag
+        default: 10.0.0
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: ["10.0.0", "9.4.0"]
+    steps:
+      - name: Pull image and record digest
+        run: |
+          docker pull onlyoffice/documentserver:${{ matrix.tag }}
+          docker image inspect onlyoffice/documentserver:${{ matrix.tag }} --format '{{json .RepoDigests}}' | tee digest.json
+      - name: Start container so fonts are generated, then copy files
+        run: |
+          docker run -d --name ds -e JWT_ENABLED=false onlyoffice/documentserver:${{ matrix.tag }}
+          for i in $(seq 1 60); do
+            if docker exec ds test -f /var/www/onlyoffice/documentserver/sdkjs/common/AllFonts.js; then echo "fonts ready after $((i*5))s"; break; fi
+            sleep 5
+          done
+          sleep 10
+          D=/var/www/onlyoffice/documentserver
+          mkdir -p out
+          for p in web-apps sdkjs sdkjs-plugins fonts dictionaries; do docker cp ds:$D/$p out/$p || echo "missing $p"; done
+          docker exec ds sh -c "ls $D; cat $D/server/package.json 2>/dev/null | head -5" > out/ds-tree.txt || true
+          docker exec ds sh -c "ls /usr/share/fonts -R | head -200" > out/system-fonts.txt || true
+          cp digest.json out/
+          docker rm -f ds
+      - name: Inventory
+        run: |
+          cd out
+          du -sh * | tee ../du.txt
+          find . -type f | wc -l | tee -a ../du.txt
+          find . -type f -size +20M -exec ls -l {} \; | tee -a ../du.txt
+          grep -o '"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*"' web-apps/apps/api/documents/api.js | head -3 | tee -a ../du.txt || true
+          grep -rl "_offline_" web-apps sdkjs | head -20 | tee -a ../du.txt || true
+          cp ../du.txt inventory.txt
+          tar -I 'zstd -19 -T0' -cf ../vendor-${{ matrix.tag }}.tar.zst .
+          ls -l ../vendor-${{ matrix.tag }}.tar.zst
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vendor-${{ matrix.tag }}
+          path: vendor-${{ matrix.tag }}.tar.zst
+          compression-level: 0
+          retention-days: 14
